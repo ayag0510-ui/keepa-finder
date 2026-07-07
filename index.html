@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keepaプロダクトファインダー簡易版</title>
+<style>
+  :root {
+    --accent: #0f7b6c;
+    --accent-dark: #0b5c50;
+    --bg: #f4f6f5;
+    --card-bg: #ffffff;
+    --border: #e0e4e2;
+    --text: #1f2a28;
+    --sub: #6b7876;
+    --error-bg: #fdeceb;
+    --error-border: #e0857a;
+    --error-text: #9c2f22;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .container { max-width: 720px; margin: 0 auto; }
+  header {
+    text-align: center;
+    padding: 20px 8px;
+  }
+  header h1 { font-size: 22px; margin: 0 0 6px; }
+  header p { margin: 0; color: var(--sub); font-size: 14px; }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .card h2 {
+    font-size: 16px;
+    margin: 0 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .desc {
+    font-size: 13px;
+    color: var(--sub);
+    margin: 4px 0 12px;
+  }
+  label.field-label {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+  input[type="text"], input[type="password"], input[type="number"], select {
+    font-size: 16px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    width: 100%;
+    background: #fff;
+    color: var(--text);
+  }
+  input.error, .range-row.has-error input {
+    border-color: var(--error-border);
+    background: #fff8f7;
+  }
+  .field-error {
+    color: var(--error-text);
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  .range-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .range-row input[type="number"] { width: 110px; flex: 1 1 100px; }
+  .range-row span.unit { color: var(--sub); font-size: 14px; white-space: nowrap; }
+  .preset-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  button.preset {
+    font-size: 13px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--accent);
+    background: #fff;
+    color: var(--accent-dark);
+    cursor: pointer;
+  }
+  button.preset:hover { background: #eaf5f3; }
+  .checkbox-row, .radio-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+  }
+  .radio-group { display: flex; flex-direction: column; gap: 8px; }
+  .radio-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .radio-line input[type="number"] { width: 90px; }
+  .api-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .api-row input[type="password"], .api-row input[type="text"] { flex: 1 1 200px; }
+  button.icon-btn {
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #fff;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  button.primary {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  button.primary:hover { background: var(--accent-dark); }
+  button.primary:disabled { background: #9fb9b4; cursor: not-allowed; }
+  .token-display {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--sub);
+  }
+  .search-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .search-row select { width: auto; }
+  .token-estimate { font-size: 13px; color: var(--sub); }
+  .search-btn-wrap { text-align: center; }
+  button.search-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 24px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+  }
+  button.search-btn:hover { background: var(--accent-dark); }
+  button.search-btn:disabled { background: #9fb9b4; cursor: not-allowed; }
+  .error-box {
+    background: var(--error-bg);
+    border: 1px solid var(--error-border);
+    color: var(--error-text);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    font-size: 14px;
+  }
+  .error-box details { margin-top: 6px; font-size: 12px; color: var(--error-text); opacity: 0.8; }
+  .hidden { display: none !important; }
+  .results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .results-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  table.result-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  table.result-table th, table.result-table td {
+    border-bottom: 1px solid var(--border);
+    padding: 8px 6px;
+    text-align: left;
+  }
+  table.result-table td.asin-cell { font-family: "Consolas", "Menlo", monospace; }
+  table.result-table a { color: var(--accent-dark); text-decoration: none; }
+  table.result-table a:hover { text-decoration: underline; }
+  .table-wrap { overflow-x: auto; }
+  .guidance-box {
+    font-size: 14px;
+    color: var(--sub);
+    line-height: 1.8;
+  }
+  .guidance-box ul { margin: 8px 0 0; padding-left: 20px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🔍 Keepaプロダクトファインダー簡易版</h1>
+    <p>リピート商材を横展開でリサーチするための、カンタン版ASIN抽出ツールです</p>
+  </header>
+
+  <div id="errorBox" class="error-box hidden"></div>
+
+  <!-- ① APIキー設定 -->
+  <section class="card">
+    <h2>① APIキー設定</h2>
+    <p class="desc">あなた自身のKeepa APIキーを入力してください。キーは keepa.com にログイン →「API」ページで確認できます（Keepa有料会員なら無料で発行されます）。キーはこのブラウザの中にだけ保存され、Keepa以外に送信されることはありません。</p>
+    <div class="api-row">
+      <input type="password" id="apiKeyInput" placeholder="Keepa APIキーを貼り付け">
+      <button type="button" class="icon-btn" id="toggleApiKeyBtn">👁</button>
+      <button type="button" class="primary" id="saveApiKeyBtn">保存</button>
+    </div>
+    <div class="token-display" id="tokenDisplay">APIキーが未設定です</div>
+  </section>
+
+  <!-- ② 売れ筋ランキング -->
+  <section class="card">
+    <h2>② 売れ筋ランキング</h2>
+    <p class="desc">現在の売れ筋ランキングで絞り込みます。推奨値：よく売れている商品なら 1位〜5,000位、まあまあ売れている商品なら 〜50,000位。</p>
+    <div class="range-row" id="salesRankRow">
+      <input type="number" id="salesRankMin" min="1" placeholder="下限">
+      <span class="unit">位 〜</span>
+      <input type="number" id="salesRankMax" min="1" placeholder="上限">
+      <span class="unit">位</span>
+    </div>
+    <div class="field-error hidden" id="salesRankError"></div>
+    <div class="preset-row">
+      <button type="button" class="preset" id="presetWellSold">よく売れている商品（1〜5,000位）</button>
+      <button type="button" class="preset" id="presetOkSold">まあまあ売れている商品（〜50,000位）</button>
+    </div>
+  </section>
+
+  <!-- ③ Amazon本体の在庫状況 -->
+  <section class="card">
+    <h2>③ Amazon本体の在庫状況</h2>
+    <div class="checkbox-row">
+      <input type="checkbox" id="amazonOOSCheckbox">
+      <label for="amazonOOSCheckbox">Amazon本体が在庫切れ（在庫なし）の商品だけを抽出する</label>
+    </div>
+    <p class="desc">Amazon本体がいない商品は価格競争になりにくく、狙い目です。</p>
+  </section>
+
+  <!-- ④ 新品価格 -->
+  <section class="card">
+    <h2>④ 新品価格</h2>
+    <p class="desc">安すぎると利益額が小さくなります。目安：下限1,000円〜。上限は扱うジャンルの相場に合わせて設定してください（例：ペットフードなら10,000円など）。</p>
+    <div class="range-row" id="priceRow">
+      <input type="number" id="priceMin" min="0" placeholder="下限">
+      <span class="unit">円 〜</span>
+      <input type="number" id="priceMax" min="0" placeholder="上限">
+      <span class="unit">円</span>
+    </div>
+    <div class="field-error hidden" id="priceError"></div>
+  </section>
+
+  <!-- ⑤ 価格変動率（90日間） -->
+  <section class="card">
+    <h2>⑤ 価格変動率（90日間）</h2>
+    <p class="desc">90日前と比べた価格の上下率です。リピート商品は価格が安定しているものが望ましいため、±20%以内が目安。より安定を求めるなら±10%以内を推奨します。</p>
+    <div class="range-row">
+      <span class="unit">±</span>
+      <input type="number" id="deltaPercentInput" min="1" max="100" placeholder="20">
+      <span class="unit">% 以内</span>
+    </div>
+    <div class="field-error hidden" id="deltaError"></div>
+    <div class="preset-row">
+      <button type="button" class="preset" id="presetDelta10">±10%（より安定）</button>
+      <button type="button" class="preset" id="presetDelta20">±20%（目安）</button>
+      <button type="button" class="preset" id="presetDeltaNone">指定なし</button>
+    </div>
+  </section>
+
+  <!-- ⑥ 商品名キーワード -->
+  <section class="card">
+    <h2>⑥ 商品名キーワード</h2>
+    <p class="desc">商品名に含まれる言葉で絞り込みます。利益商品を1つ見つけたら、そのブランド名・シリーズ名で検索して横展開するのがおすすめです。</p>
+    <input type="text" id="keywordInput" placeholder="例：ロイヤルカナン" maxlength="100">
+    <div class="field-error hidden" id="keywordError"></div>
+  </section>
+
+  <!-- ⑦ 新品出品者数 -->
+  <section class="card">
+    <h2>⑦ 新品出品者数</h2>
+    <p class="desc">現在の新品出品者の人数です。出品者が2人以下の商品は抽出対象外にしています（独占・寡占商品は参入しづらいため。下限の数値は変更できます）。上限は、安定重視なら10人、初心者の目安なら20人がおすすめです。</p>
+    <div class="range-row">
+      <span class="unit">下限</span>
+      <input type="number" id="offerCountMin" min="0" placeholder="3">
+      <span class="unit">人 〜</span>
+    </div>
+    <div class="radio-group" style="margin-top:10px;">
+      <div class="radio-line">
+        <input type="radio" name="offerMax" id="offerMaxTen" value="ten">
+        <label for="offerMaxTen">10人（安定重視）</label>
+      </div>
+      <div class="radio-line">
+        <input type="radio" name="offerMax" id="offerMaxTwenty" value="twenty">
+        <label for="offerMaxTwenty">20人（初心者目安）</label>
+      </div>
+      <div class="radio-line">
+        <input type="radio" name="offerMax" id="offerMaxCustom" value="custom">
+        <label for="offerMaxCustom">カスタム</label>
+        <input type="number" id="offerMaxCustomInput" min="0" placeholder="人数">
+      </div>
+      <div class="radio-line">
+        <input type="radio" name="offerMax" id="offerMaxNone" value="none">
+        <label for="offerMaxNone">上限なし</label>
+      </div>
+    </div>
+  </section>
+
+  <!-- ⑧ バリエーション -->
+  <section class="card">
+    <h2>⑧ バリエーション</h2>
+    <p class="desc">サイズ違い・色違いなどのバリエーションがある商品を含めるかどうかです。迷ったら「どちらでも良い」のままでOKです。</p>
+    <div class="radio-line">
+      <input type="radio" name="variation" id="variationAny" value="any">
+      <label for="variationAny">どちらでも良い</label>
+      <input type="radio" name="variation" id="variationYes" value="yes">
+      <label for="variationYes">あり</label>
+      <input type="radio" name="variation" id="variationNo" value="no">
+      <label for="variationNo">なし</label>
+    </div>
+  </section>
+
+  <!-- ⑨ 月間販売数 -->
+  <section class="card">
+    <h2>⑨ 月間販売数（目安）</h2>
+    <p class="desc">過去30日間にランキングが下がった回数（Drops）＝売れた個数の目安で絞り込みます。厳密な販売数ではありませんが、リサーチの目安になります。</p>
+    <select id="monthlySoldSelect">
+      <option value="none">指定なし</option>
+      <option value="five">月5個以上売れている</option>
+      <option value="ten">月10個以上売れている</option>
+      <option value="fifteen">月15個以上売れている</option>
+      <option value="custom">カスタム</option>
+    </select>
+    <input type="number" id="monthlySoldCustomInput" min="0" placeholder="個数" style="margin-top:8px;" class="hidden">
+  </section>
+
+  <!-- ⑩ カテゴリ -->
+  <section class="card">
+    <h2>⑩ カテゴリ</h2>
+    <p class="desc">カテゴリで絞ると、キーワードだけでは混ざってくる関係ない商品を除外できて精度が大きく上がります（例：「ロイヤルカナン」×「ペット用品」）。</p>
+    <select id="categorySelect">
+      <option value="">指定なし</option>
+    </select>
+  </section>
+
+  <!-- ⑪ 検索実行 -->
+  <section class="card">
+    <h2>⑪ 検索実行</h2>
+    <div class="search-row">
+      <label for="perPageSelect">取得件数</label>
+      <select id="perPageSelect">
+        <option value="50">50件</option>
+        <option value="100" selected>100件</option>
+        <option value="300">300件</option>
+        <option value="500">500件</option>
+      </select>
+      <span class="token-estimate" id="tokenEstimate">消費: 最大11トークン</span>
+    </div>
+    <div class="search-btn-wrap">
+      <button type="button" class="search-btn" id="searchBtn">🔍 この条件で検索する</button>
+    </div>
+  </section>
+
+  <!-- ⑫ 検索結果 -->
+  <section class="card hidden" id="resultsCard">
+    <h2>⑫ 検索結果</h2>
+    <div class="results-header">
+      <div id="resultsSummary"></div>
+      <div class="results-actions">
+        <button type="button" class="icon-btn" id="copyAsinsBtn">📋 全ASINをコピー</button>
+        <button type="button" class="icon-btn" id="downloadCsvBtn">⬇ CSVダウンロード</button>
+      </div>
+    </div>
+    <div id="guidanceBox" class="guidance-box hidden"></div>
+    <div class="table-wrap">
+      <table class="result-table" id="resultTable">
+        <thead>
+          <tr><th>#</th><th>ASIN</th><th>Keepa</th><th>Amazon</th></tr>
+        </thead>
+        <tbody id="resultTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var FALLBACK_CATEGORIES = [
+    { id: 2127209051, name: "ペット用品" },
+    { id: 160384011, name: "ドラッグストア" },
+    { id: 57239051, name: "食品・飲料・お酒" },
+    { id: 52374051, name: "ビューティー" },
+    { id: 3828871, name: "ホーム＆キッチン" },
+    { id: 13299531, name: "おもちゃ" },
+    { id: 344845011, name: "ベビー＆マタニティ" },
+    { id: 3210981, name: "家電＆カメラ" },
+    { id: 14304371, name: "スポーツ＆アウトドア" },
+    { id: 86731051, name: "文房具・オフィス用品" }
+  ];
+
+  var DEFAULT_CONDITIONS = {
+    salesRankMin: "",
+    salesRankMax: 50000,
+    amazonOOS: false,
+    priceMin: 1000,
+    priceMax: "",
+    deltaPercent: 20,
+    keyword: "",
+    offerCountMin: 3,
+    offerMaxMode: "twenty",
+    offerMaxCustom: "",
+    variation: "any",
+    monthlySoldMode: "none",
+    monthlySoldCustom: "",
+    category: "",
+    perPage: 100
+  };
+
+  var state = {
+    apiKey: "",
+    conditions: JSON.parse(JSON.stringify(DEFAULT_CONDITIONS)),
+    categoriesCache: null
+  };
+  var tokenInfo = null;
+  var lastResults = null;
+
+  // ---------- localStorage ----------
+  function loadState() {
+    try {
+      var apiKey = localStorage.getItem("keepaFinder.apiKey");
+      var conditionsRaw = localStorage.getItem("keepaFinder.conditions");
+      var categoriesRaw = localStorage.getItem("keepaFinder.categories");
+      if (apiKey) state.apiKey = apiKey;
+      if (conditionsRaw) {
+        var parsed = JSON.parse(conditionsRaw);
+        state.conditions = Object.assign({}, DEFAULT_CONDITIONS, parsed);
+      }
+      if (categoriesRaw) {
+        state.categoriesCache = JSON.parse(categoriesRaw);
+      }
+    } catch (e) {
+      // 壊れたデータは無視してデフォルトのまま使う
+    }
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem("keepaFinder.apiKey", state.apiKey || "");
+      localStorage.setItem("keepaFinder.conditions", JSON.stringify(state.conditions));
+      if (state.categoriesCache) {
+        localStorage.setItem("keepaFinder.categories", JSON.stringify(state.categoriesCache));
+      }
+    } catch (e) {
+      // localStorageが使えない環境は諦める（file://の一部ブラウザなど）
+    }
+  }
+
+  // ---------- DOM要素 ----------
+  var el = {};
+  [
+    "apiKeyInput", "toggleApiKeyBtn", "saveApiKeyBtn", "tokenDisplay",
+    "salesRankMin", "salesRankMax", "salesRankRow", "salesRankError", "presetWellSold", "presetOkSold",
+    "amazonOOSCheckbox",
+    "priceMin", "priceMax", "priceRow", "priceError",
+    "deltaPercentInput", "deltaError", "presetDelta10", "presetDelta20", "presetDeltaNone",
+    "keywordInput", "keywordError",
+    "offerCountMin", "offerMaxCustomInput",
+    "monthlySoldSelect", "monthlySoldCustomInput",
+    "categorySelect",
+    "perPageSelect", "tokenEstimate", "searchBtn",
+    "errorBox",
+    "resultsCard", "resultsSummary", "copyAsinsBtn", "downloadCsvBtn", "guidanceBox", "resultTable", "resultTableBody"
+  ].forEach(function (id) { el[id] = document.getElementById(id); });
+
+  // ---------- エラー表示 ----------
+  function showError(message, detail) {
+    el.errorBox.innerHTML = "";
+    var msg = document.createElement("div");
+    msg.textContent = message;
+    el.errorBox.appendChild(msg);
+    if (detail) {
+      var details = document.createElement("details");
+      var summary = document.createElement("summary");
+      summary.textContent = "詳細";
+      details.appendChild(summary);
+      var pre = document.createElement("div");
+      pre.textContent = detail;
+      details.appendChild(pre);
+      el.errorBox.appendChild(details);
+    }
+    el.errorBox.classList.remove("hidden");
+  }
+  function clearError() {
+    el.errorBox.classList.add("hidden");
+    el.errorBox.innerHTML = "";
+  }
+
+  function setFieldError(rowEl, errEl, message) {
+    if (message) {
+      if (rowEl) rowEl.classList.add("has-error");
+      if (errEl) { errEl.textContent = message; errEl.classList.remove("hidden"); }
+    } else {
+      if (rowEl) rowEl.classList.remove("has-error");
+      if (errEl) { errEl.textContent = ""; errEl.classList.add("hidden"); }
+    }
+  }
+
+  // ---------- fetch (タイムアウト付き) ----------
+  function fetchWithTimeout(url, options, timeoutMs) {
+    timeoutMs = timeoutMs || 30000;
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, timeoutMs);
+    var opts = Object.assign({}, options || {}, { signal: controller.signal });
+    return fetch(url, opts).finally(function () { clearTimeout(timer); });
+  }
+
+  // ---------- フォーム ↔ state ----------
+  function syncFormFromState() {
+    el.apiKeyInput.value = state.apiKey || "";
+    var c = state.conditions;
+    el.salesRankMin.value = c.salesRankMin;
+    el.salesRankMax.value = c.salesRankMax;
+    el.amazonOOSCheckbox.checked = !!c.amazonOOS;
+    el.priceMin.value = c.priceMin;
+    el.priceMax.value = c.priceMax;
+    el.deltaPercentInput.value = c.deltaPercent;
+    el.keywordInput.value = c.keyword;
+    el.offerCountMin.value = c.offerCountMin;
+    var offerRadio = document.querySelector('input[name="offerMax"][value="' + c.offerMaxMode + '"]');
+    if (offerRadio) offerRadio.checked = true;
+    el.offerMaxCustomInput.value = c.offerMaxCustom;
+    el.offerMaxCustomInput.classList.toggle("hidden", c.offerMaxMode !== "custom");
+    var variationRadio = document.querySelector('input[name="variation"][value="' + c.variation + '"]');
+    if (variationRadio) variationRadio.checked = true;
+    el.monthlySoldSelect.value = c.monthlySoldMode;
+    el.monthlySoldCustomInput.value = c.monthlySoldCustom;
+    el.monthlySoldCustomInput.classList.toggle("hidden", c.monthlySoldMode !== "custom");
+    el.categorySelect.value = c.category;
+    el.perPageSelect.value = c.perPage;
+    updateTokenEstimateDisplay();
+  }
+
+  function syncStateFromForm() {
+    var c = state.conditions;
+    c.salesRankMin = el.salesRankMin.value;
+    c.salesRankMax = el.salesRankMax.value;
+    c.amazonOOS = el.amazonOOSCheckbox.checked;
+    c.priceMin = el.priceMin.value;
+    c.priceMax = el.priceMax.value;
+    c.deltaPercent = el.deltaPercentInput.value;
+    c.keyword = el.keywordInput.value;
+    c.offerCountMin = el.offerCountMin.value === "" ? 3 : el.offerCountMin.value;
+    var offerChecked = document.querySelector('input[name="offerMax"]:checked');
+    c.offerMaxMode = offerChecked ? offerChecked.value : "twenty";
+    c.offerMaxCustom = el.offerMaxCustomInput.value;
+    var variationChecked = document.querySelector('input[name="variation"]:checked');
+    c.variation = variationChecked ? variationChecked.value : "any";
+    c.monthlySoldMode = el.monthlySoldSelect.value;
+    c.monthlySoldCustom = el.monthlySoldCustomInput.value;
+    c.category = el.categorySelect.value;
+    c.perPage = el.perPageSelect.value;
+    state.apiKey = el.apiKeyInput.value.trim();
+  }
+
+  // ---------- トークン表示 ----------
+  function updateTokenDisplay() {
+    if (!state.apiKey) {
+      el.tokenDisplay.textContent = "APIキーが未設定です";
+      return;
+    }
+    if (!tokenInfo) {
+      el.tokenDisplay.textContent = "トークン残高を確認できませんでした";
+      return;
+    }
+    el.tokenDisplay.textContent = "残りトークン: " + tokenInfo.tokensLeft + "（毎分 +" + tokenInfo.refillRate + " 補充）";
+  }
+
+  function estimateTokenCost(perPage) {
+    return 10 + Math.ceil(Number(perPage) / 100);
+  }
+
+  function updateTokenEstimateDisplay() {
+    var cost = estimateTokenCost(el.perPageSelect.value);
+    el.tokenEstimate.textContent = "消費: 最大" + cost + "トークン";
+  }
+
+  // ---------- APIキー保存 ----------
+  function saveApiKey() {
+    clearError();
+    var key = el.apiKeyInput.value.trim();
+    state.apiKey = key;
+    saveState();
+    if (!key) {
+      tokenInfo = null;
+      updateTokenDisplay();
+      return;
+    }
+    fetchTokenStatus().then(function () {
+      if (tokenInfo && (!state.categoriesCache || !state.categoriesCache.length)) {
+        fetchCategories(false);
+      }
+    });
+  }
+
+  function fetchTokenStatus() {
+    var key = state.apiKey;
+    if (!key) return Promise.resolve();
+    return fetchWithTimeout("https://api.keepa.com/token?key=" + encodeURIComponent(key))
+      .then(function (res) {
+        return res.json().then(function (data) {
+          if (!res.ok || data.error) {
+            tokenInfo = null;
+            updateTokenDisplay();
+            showError("APIキーが正しくないようです。keepa.comのAPIページでキーをコピーし直して、もう一度保存してください。");
+            return;
+          }
+          tokenInfo = { tokensLeft: data.tokensLeft, refillRate: data.refillRate };
+          updateTokenDisplay();
+        });
+      })
+      .catch(function () {
+        showError("Keepaに接続できませんでした。インターネット接続を確認して、もう一度お試しください。");
+      });
+  }
+
+  // ---------- カテゴリ取得 ----------
+  function populateCategorySelect(list) {
+    var current = el.categorySelect.value || state.conditions.category;
+    el.categorySelect.innerHTML = "";
+    var noneOpt = document.createElement("option");
+    noneOpt.value = "";
+    noneOpt.textContent = "指定なし";
+    el.categorySelect.appendChild(noneOpt);
+    list.slice().sort(function (a, b) { return a.name.localeCompare(b.name, "ja"); })
+      .forEach(function (c) {
+        var opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = c.name;
+        el.categorySelect.appendChild(opt);
+      });
+    if (current) el.categorySelect.value = current;
+  }
+
+  function fetchCategories(force) {
+    if (!force && state.categoriesCache && state.categoriesCache.length) {
+      populateCategorySelect(state.categoriesCache);
+      return Promise.resolve();
+    }
+    if (!state.apiKey) {
+      populateCategorySelect(FALLBACK_CATEGORIES);
+      return Promise.resolve();
+    }
+    return fetchWithTimeout("https://api.keepa.com/category?domain=5&ids=0&key=" + encodeURIComponent(state.apiKey))
+      .then(function (res) {
+        return res.json().then(function (data) {
+          if (!res.ok || data.error || !data.categories) throw new Error("category fetch failed");
+          var list = Object.keys(data.categories).map(function (k) {
+            var c = data.categories[k];
+            return { id: c.catId || Number(k), name: c.name };
+          }).filter(function (c) { return c.name; });
+          state.categoriesCache = list;
+          saveState();
+          populateCategorySelect(list);
+        });
+      })
+      .catch(function () {
+        populateCategorySelect(FALLBACK_CATEGORIES);
+      });
+  }
+
+  // ---------- バリデーション ----------
+  function validateInputs() {
+    var c = state.conditions;
+    var ok = true;
+
+    var salesMin = c.salesRankMin === "" ? null : Number(c.salesRankMin);
+    var salesMax = c.salesRankMax === "" ? null : Number(c.salesRankMax);
+    if (salesMin !== null && salesMax !== null && salesMin > salesMax) {
+      setFieldError(el.salesRankRow, el.salesRankError, "下限が上限より大きくなっています");
+      ok = false;
+    } else {
+      setFieldError(el.salesRankRow, el.salesRankError, null);
+    }
+
+    var priceMin = c.priceMin === "" ? null : Number(c.priceMin);
+    var priceMax = c.priceMax === "" ? null : Number(c.priceMax);
+    if (priceMin !== null && priceMax !== null && priceMin > priceMax) {
+      setFieldError(el.priceRow, el.priceError, "下限が上限より大きくなっています");
+      ok = false;
+    } else {
+      setFieldError(el.priceRow, el.priceError, null);
+    }
+
+    if (c.deltaPercent !== "" && c.deltaPercent !== null) {
+      var d = Number(c.deltaPercent);
+      if (isNaN(d) || d < 1 || d > 100) {
+        setFieldError(null, el.deltaError, "1〜100の範囲で入力してください");
+        ok = false;
+      } else {
+        setFieldError(null, el.deltaError, null);
+      }
+    } else {
+      setFieldError(null, el.deltaError, null);
+    }
+
+    if (c.keyword && c.keyword.length > 100) {
+      setFieldError(null, el.keywordError, "100文字以内で入力してください");
+      ok = false;
+    } else {
+      setFieldError(null, el.keywordError, null);
+    }
+
+    if (c.offerCountMin === "" || c.offerCountMin === null) {
+      c.offerCountMin = 3;
+      el.offerCountMin.value = 3;
+    }
+
+    return ok;
+  }
+
+  // ---------- selection JSON 構築 ----------
+  function buildSelection() {
+    var c = state.conditions;
+    var sel = {};
+
+    if (c.salesRankMin !== "" && c.salesRankMin !== null) sel.current_SALES_gte = Number(c.salesRankMin);
+    if (c.salesRankMax !== "" && c.salesRankMax !== null) sel.current_SALES_lte = Number(c.salesRankMax);
+
+    if (c.amazonOOS) sel.availabilityAmazon = [-1];
+
+    if (c.priceMin !== "" && c.priceMin !== null) sel.current_NEW_gte = Number(c.priceMin);
+    if (c.priceMax !== "" && c.priceMax !== null) sel.current_NEW_lte = Number(c.priceMax);
+
+    if (c.deltaPercent !== "" && c.deltaPercent !== null) {
+      var x = Number(c.deltaPercent);
+      sel.deltaPercent90_NEW_gte = -x;
+      sel.deltaPercent90_NEW_lte = x;
+    }
+
+    var keyword = (c.keyword || "").trim();
+    if (keyword) sel.title = keyword;
+
+    sel.current_COUNT_NEW_gte = Number(c.offerCountMin || 3);
+    var maxOffer = null;
+    if (c.offerMaxMode === "ten") maxOffer = 10;
+    else if (c.offerMaxMode === "twenty") maxOffer = 20;
+    else if (c.offerMaxMode === "custom" && c.offerMaxCustom !== "") maxOffer = Number(c.offerMaxCustom);
+    if (maxOffer !== null && !isNaN(maxOffer)) sel.current_COUNT_NEW_lte = maxOffer;
+
+    if (c.variation === "yes") sel.hasParentASIN = true;
+    else if (c.variation === "no") sel.hasParentASIN = false;
+
+    var monthlySold = null;
+    if (c.monthlySoldMode === "five") monthlySold = 5;
+    else if (c.monthlySoldMode === "ten") monthlySold = 10;
+    else if (c.monthlySoldMode === "fifteen") monthlySold = 15;
+    else if (c.monthlySoldMode === "custom" && c.monthlySoldCustom !== "") monthlySold = Number(c.monthlySoldCustom);
+    if (monthlySold !== null && !isNaN(monthlySold)) sel.salesRankDrops30_gte = monthlySold;
+
+    if (c.category) sel.rootCategory = Number(c.category);
+
+    sel.productType = [0];
+    sel.sort = [["current_SALES", "asc"]];
+    sel.perPage = Number(c.perPage);
+    sel.page = 0;
+
+    return sel;
+  }
+
+  // ---------- 検索実行 ----------
+  function handleApiError(status, data) {
+    if (status === 401 || status === 403) {
+      showError("APIキーが正しくないようです。keepa.comのAPIページでキーをコピーし直して、もう一度保存してください。");
+    } else if (status === 429 || status === 402) {
+      showError("Keepaのトークンが不足しています。数分待ってから再度お試しください（トークンは毎分20ずつ回復します）。");
+    } else if (status === 400) {
+      showError("検索条件の指定に問題がありました。条件を見直してもう一度お試しください。", data && data.error ? JSON.stringify(data.error) : "");
+    } else {
+      showError("Keepaへのリクエストでエラーが発生しました。しばらくしてから再度お試しください。", data && data.error ? JSON.stringify(data.error) : "");
+    }
+  }
+
+  function setSearching(isSearching) {
+    el.searchBtn.disabled = isSearching;
+    el.searchBtn.textContent = isSearching ? "検索中…" : "🔍 この条件で検索する";
+  }
+
+  function executeSearch() {
+    clearError();
+    syncStateFromForm();
+    saveState();
+
+    if (!state.apiKey) {
+      showError("先にAPIキーを設定してください（①のセクションで保存できます）");
+      return;
+    }
+    if (!validateInputs()) return;
+
+    var estimate = estimateTokenCost(state.conditions.perPage);
+    if (tokenInfo && tokenInfo.tokensLeft < estimate) {
+      var proceed = confirm(
+        "残りトークンが足りない可能性があります（残り" + tokenInfo.tokensLeft + " / 必要 最大" + estimate + "）。" +
+        "トークンは毎分20ずつ回復します。このまま検索しますか？"
+      );
+      if (!proceed) return;
+    }
+
+    setSearching(true);
+    var selection = buildSelection();
+
+    fetchWithTimeout("https://api.keepa.com/query?domain=5&key=" + encodeURIComponent(state.apiKey), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(selection)
+    })
+      .then(function (res) {
+        return res.json().then(function (data) { return { res: res, data: data }; });
+      })
+      .then(function (result) {
+        var res = result.res, data = result.data;
+        if (!res.ok || data.error) {
+          handleApiError(res.status, data);
+          return;
+        }
+        lastResults = { asinList: data.asinList || [], totalResults: typeof data.totalResults === "number" ? data.totalResults : (data.asinList || []).length };
+        if (typeof data.tokensLeft === "number") {
+          tokenInfo = { tokensLeft: data.tokensLeft, refillRate: tokenInfo ? tokenInfo.refillRate : (data.refillRate || 20) };
+          updateTokenDisplay();
+        }
+        renderResults(lastResults.asinList, lastResults.totalResults);
+      })
+      .catch(function () {
+        showError("Keepaに接続できませんでした。インターネット接続を確認して、もう一度お試しください。");
+      })
+      .finally(function () {
+        setSearching(false);
+      });
+  }
+
+  // ---------- 結果表示 ----------
+  function renderResults(asinList, totalResults) {
+    el.resultsCard.classList.remove("hidden");
+    el.resultsSummary.textContent = "条件に合った商品: " + totalResults + "件（うち" + asinList.length + "件を表示）";
+
+    if (totalResults === 0) {
+      el.guidanceBox.classList.remove("hidden");
+      el.guidanceBox.innerHTML =
+        "条件に合う商品が見つかりませんでした。次を試してみてください：" +
+        "<ul>" +
+        "<li>ランキング上限を上げる（例：50,000→100,000）</li>" +
+        "<li>価格の範囲を広げる</li>" +
+        "<li>変動率を「指定なし」にする</li>" +
+        "<li>出品者数の上限を増やす</li>" +
+        "</ul>";
+      el.resultTable.classList.add("hidden");
+      el.resultTableBody.innerHTML = "";
+      return;
+    }
+
+    el.guidanceBox.classList.add("hidden");
+    el.resultTable.classList.remove("hidden");
+    el.resultTableBody.innerHTML = "";
+    asinList.forEach(function (asin, i) {
+      var tr = document.createElement("tr");
+
+      var tdIndex = document.createElement("td");
+      tdIndex.textContent = String(i + 1);
+      tr.appendChild(tdIndex);
+
+      var tdAsin = document.createElement("td");
+      tdAsin.className = "asin-cell";
+      tdAsin.textContent = asin;
+      tr.appendChild(tdAsin);
+
+      var tdKeepa = document.createElement("td");
+      var aKeepa = document.createElement("a");
+      aKeepa.href = "https://keepa.com/#!product/5-" + asin;
+      aKeepa.target = "_blank";
+      aKeepa.rel = "noopener";
+      aKeepa.textContent = "開く↗";
+      tdKeepa.appendChild(aKeepa);
+      tr.appendChild(tdKeepa);
+
+      var tdAmazon = document.createElement("td");
+      var aAmazon = document.createElement("a");
+      aAmazon.href = "https://www.amazon.co.jp/dp/" + asin;
+      aAmazon.target = "_blank";
+      aAmazon.rel = "noopener";
+      aAmazon.textContent = "開く↗";
+      tdAmazon.appendChild(aAmazon);
+      tr.appendChild(tdAmazon);
+
+      el.resultTableBody.appendChild(tr);
+    });
+  }
+
+  // ---------- コピー・CSV ----------
+  function copyAsins() {
+    if (!lastResults || !lastResults.asinList.length) return;
+    var text = lastResults.asinList.join("\n");
+    var done = function () {
+      var original = "📋 全ASINをコピー";
+      el.copyAsinsBtn.textContent = "✓ コピーしました";
+      setTimeout(function () { el.copyAsinsBtn.textContent = original; }, 2000);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(function () { fallbackCopy(text, done); });
+    } else {
+      fallbackCopy(text, done);
+    }
+  }
+
+  function fallbackCopy(text, done) {
+    var textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    try { document.execCommand("copy"); done(); } catch (e) { /* コピー失敗は無視 */ }
+    document.body.removeChild(textarea);
+  }
+
+  function downloadCsv() {
+    if (!lastResults || !lastResults.asinList.length) return;
+    var rows = [["ASIN", "Keepa", "Amazon"]];
+    lastResults.asinList.forEach(function (asin) {
+      rows.push([asin, "https://keepa.com/#!product/5-" + asin, "https://www.amazon.co.jp/dp/" + asin]);
+    });
+    var csv = rows.map(function (row) { return row.join(","); }).join("\r\n");
+    var blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var now = new Date();
+    var pad = function (n) { return String(n).padStart(2, "0"); };
+    var filename = "keepa_asin_" + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) + "_" + pad(now.getHours()) + pad(now.getMinutes()) + ".csv";
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // ---------- イベント登録 ----------
+  el.toggleApiKeyBtn.addEventListener("click", function () {
+    el.apiKeyInput.type = el.apiKeyInput.type === "password" ? "text" : "password";
+  });
+  el.saveApiKeyBtn.addEventListener("click", saveApiKey);
+
+  el.presetWellSold.addEventListener("click", function () {
+    el.salesRankMin.value = 1;
+    el.salesRankMax.value = 5000;
+  });
+  el.presetOkSold.addEventListener("click", function () {
+    el.salesRankMin.value = 1;
+    el.salesRankMax.value = 50000;
+  });
+
+  el.presetDelta10.addEventListener("click", function () { el.deltaPercentInput.value = 10; });
+  el.presetDelta20.addEventListener("click", function () { el.deltaPercentInput.value = 20; });
+  el.presetDeltaNone.addEventListener("click", function () { el.deltaPercentInput.value = ""; });
+
+  document.querySelectorAll('input[name="offerMax"]').forEach(function (radio) {
+    radio.addEventListener("change", function () {
+      el.offerMaxCustomInput.classList.toggle("hidden", radio.value !== "custom" || !radio.checked);
+    });
+  });
+
+  el.monthlySoldSelect.addEventListener("change", function () {
+    el.monthlySoldCustomInput.classList.toggle("hidden", el.monthlySoldSelect.value !== "custom");
+  });
+
+  el.perPageSelect.addEventListener("change", updateTokenEstimateDisplay);
+
+  el.searchBtn.addEventListener("click", executeSearch);
+  el.copyAsinsBtn.addEventListener("click", copyAsins);
+  el.downloadCsvBtn.addEventListener("click", downloadCsv);
+
+  // ---------- 初期化 ----------
+  function init() {
+    loadState();
+    syncFormFromState();
+    if (state.apiKey) {
+      fetchTokenStatus().then(function () { fetchCategories(false); });
+    } else {
+      el.tokenDisplay.textContent = "APIキーが未設定です";
+      fetchCategories(false);
+    }
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
