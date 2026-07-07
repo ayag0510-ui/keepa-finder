@@ -820,12 +820,10 @@
 
     setSearching(true);
     var selection = buildSelection();
+    var queryUrl = "https://api.keepa.com/query?domain=5&key=" + encodeURIComponent(state.apiKey) +
+      "&selection=" + encodeURIComponent(JSON.stringify(selection));
 
-    fetchWithTimeout("https://api.keepa.com/query?domain=5&key=" + encodeURIComponent(state.apiKey), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(selection)
-    })
+    fetchWithTimeout(queryUrl)
       .then(function (res) {
         return res.json().then(function (data) { return { res: res, data: data }; });
       })
